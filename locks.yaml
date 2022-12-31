@@ -1,0 +1,232 @@
+input_text:
+  slot_id:
+    name: ID
+    initial: ""
+  user_pin:
+    name: Pin
+    initial: ""
+    #pattern: "^[0-9]{4,8}$"
+
+input_select:
+  lock:
+    options:
+      - Front Door
+      - Back Door
+    initial: Front Door
+
+script:
+  add_code:
+    alias: Add Lock Code
+    icon: mdi:key-plus
+    variables:
+      slot_id: "{{ states('input_text.slot_id') | int }}"
+      user_pin: "{{ states('input_text.user_pin') | int }}"
+      lock: >
+        {% if is_state("input_select.lock", "Front Door") %} lock.front_door_lock
+        {% elif is_state("input_select.lock", "Back Door") %} lock.back_door_lock
+        {% endif %}
+    mode: single
+    sequence:
+      - service: zha.set_lock_user_code
+        target:
+          entity_id: "{{ lock }}"
+        data:
+          code_slot: "{{ slot_id }}"
+          user_code: "{{ user_pin }}"
+      - service: logbook.log
+        data:
+          name: Lock code added
+          message: "slot: {{ slot_id }} on {{ lock }} was updated."
+      - service: notify.trav_and_kate
+        data:
+          message: "slot: {{ slot_id }} was updated with a new code: {{ user_pin }}"
+          title: New pin - {{ states('input_select.lock') }}
+          data:
+            ttl: 0
+            priority: high
+            group: locks
+
+  remove_code:
+    alias: Remove Lock Code
+    icon: mdi:key-minus
+    variables:
+      slot_id: "{{ states('input_text.slot_id') | int }}"
+      lock: >
+        {% if is_state("input_select.lock", "Front Door") %} lock.front_door_lock
+        {% elif is_state("input_select.lock", "Back Door") %} lock.back_door_lock
+        {% endif %}
+    mode: single
+    sequence:
+      - service: zha.clear_lock_user_code
+        target:
+          entity_id: "{{ lock }}"
+        data:
+          code_slot: "{{ slot_id }}"
+      - service: logbook.log
+        data:
+          name: Lock code removed
+          message: "slot: {{ slot_id }} was removed from {{ states('input_select.lock') }} Lock"
+      - service: notify.trav_and_kate
+        data:
+          message: "slot: {{ slot_id }} was deleted on {{ states('input_select.lock') }} Lock"
+          title: Pin removed - {{ states('input_select.lock') }}
+          data:
+            ttl: 0
+            priority: high
+            group: locks
+
+  disable_code:
+    alias: Disable Lock Code
+    icon: mdi:account-cancel
+    variables:
+      slot_id: "{{ states('input_text.slot_id') | int }}"
+      lock: >
+        {% if is_state("input_select.lock", "Front Door") %} lock.front_door_lock
+        {% elif is_state("input_select.lock", "Back Door") %} lock.back_door_lock
+        {% endif %}
+    mode: single
+    sequence:
+      - service: zha.disable_lock_user_code
+        target:
+          entity_id: "{{ lock }}"
+        data:
+          code_slot: "{{ slot_id }}"
+      - service: logbook.log
+        data:
+          name: Lock code disabled
+          message: "slot: {{ slot_id }} was disabled on {{ states('input_select.lock') }}"
+      - service: notify.trav_and_kate
+        data:
+          message: "slot: {{ slot_id }} was disabled on {{ states('input_select.lock') }}"
+          title: Pin disabled - {{ states('input_select.lock') }}
+          data:
+            ttl: 0
+            priority: high
+            group: locks
+
+  enable_code:
+    alias: Enable Lock Code
+    icon: mdi:account-check
+    variables:
+      slot_id: "{{ states('input_text.slot_id') | int }}"
+      lock: >
+        {% if is_state("input_select.lock", "Front Door") %} lock.front_door_lock
+        {% elif is_state("input_select.lock", "Back Door") %} lock.back_door_lock
+        {% endif %}
+    mode: single
+    sequence:
+      - service: zha.enable_lock_user_code
+        target:
+          entity_id: "{{ lock }}"
+        data:
+          code_slot: "{{ slot_id }}"
+      - service: logbook.log
+        data:
+          name: Lock code enabled
+          message: "slot: {{ slot_id }} was enabled on {{ states('input_select.lock') }}"
+      - service: notify.trav_and_kate
+        data:
+          message: >
+            slot: {{ slot_id }} was enabled on {{ states('input_select.lock') }}
+          title: Pin enabled
+          data:
+            ttl: 0
+            priority: high
+            group: locks
+
+  clear_fields:
+    alias: Clear Input Text Fields
+    mode: single
+    sequence:
+      - service: input_text.set_value
+        target:
+          entity_id:
+            - input_text.slot_id
+            - input_text.user_pin
+        data:
+          value: ""
+
+  add_single_use_code:
+    alias: Add Single Use Code
+    mode: single
+    icon: mdi:numeric-1-circle-outline
+    variables:
+      slot_id: "111"
+      user_pin: "{{ states('input_text.user_pin') | int }}"
+      lock: >
+        {% if is_state("input_select.lock", "Front Door") %} lock.front_door_lock
+        {% elif is_state("input_select.lock", "Back Door") %} lock.back_door_lock
+        {% endif %}
+    sequence:
+      - service: zha.set_lock_user_code
+        target:
+          entity_id: "{{ lock }}"
+        data:
+          code_slot: "{{ slot_id }}"
+          user_code: "{{ user_pin }}"
+      - service: logbook.log
+        data:
+          name: Single use Code Created
+          message: on {{ states('input_select.lock') }}
+      - service: notify.trav_and_kate
+        data:
+          message: "{{ user_pin }}*"
+          title: "Single use Code Created - {{ states('input_select.lock') }}"
+          data:
+            ttl: 0
+            priority: high
+            group: locks
+            color: yellow
+
+#### Lock Summary #####################################################################
+#### Source: https://community.home-assistant.io/t/wildcard-entities-card/72969/3
+#######################################################################################
+template:
+  - sensor:
+      - name: Lock Summary
+        state: >
+          {%-for state in states.lock
+              if state.state== "unlocked" -%}
+                {%-if loop.last-%}
+                  {%-if loop.index > 0-%}
+                    {%-for state in states.lock if state.state == "unlocked" -%}
+                      {{state.name | replace('Lock', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} unlocked{%endif-%}
+                    {%-endfor-%}
+                  {%-endif-%}
+                {%-endif-%}
+              {%-else-%}
+                All locked
+            {%-endfor-%}
+        icon: >
+          {%-for state in states.lock
+            if state.state == "unlocked" -%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:lock-alert-outline
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:lock-check-outline
+          {%-endfor-%}
+        attributes:
+          count: |-
+            {%-for state in states.lock
+              if(state.state=="unlocked")-%}
+                {%-if loop.last-%}
+                  {%-if loop.index > 0-%}
+                    {{loop.length}}
+                  {%-endif-%}
+                {%-endif-%}
+              {%-else-%}
+                0
+            {%-endfor-%}
+          history_1: "{{ state_attr('sensor.lock_summary', 'history_1') }}"
+          history_2: "{{ state_attr('sensor.lock_summary', 'history_2') }}"
+          history_3: "{{ state_attr('sensor.lock_summary', 'history_3') }}"
+          history_4: "{{ state_attr('sensor.lock_summary', 'history_4') }}"
+          history_5: "{{ state_attr('sensor.lock_summary', 'history_5') }}"
+          history_6: "{{ state_attr('sensor.lock_summary', 'history_6') }}"
+          history_7: "{{ state_attr('sensor.lock_summary', 'history_7') }}"
+          history_8: "{{ state_attr('sensor.lock_summary', 'history_8') }}"
+          history_9: "{{ state_attr('sensor.lock_summary', 'history_9') }}"
+          history_10: "{{ state_attr('sensor.lock_summary', 'history_10') }}"

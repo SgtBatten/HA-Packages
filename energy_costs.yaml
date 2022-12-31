@@ -1,0 +1,171 @@
+template:
+  - sensor:
+      - name: "Electricity Import Rate High Demand"
+        unique_id: electricity_import_rate_high_demand
+        icon: mdi:cash-minus
+        unit_of_measurement: "$/kWh"
+        state: "0.25707"
+
+      - name: "Electricity Import Rate Low Demand"
+        unique_id: electricity_import_rate_low_demand
+        icon: mdi:cash-minus
+        unit_of_measurement: "$/kWh"
+        state: "0.15191"
+
+      - name: "Electricity Import Rate Peak"
+        unique_id: electricity_import_rate_peak
+        icon: mdi:cash-minus
+        unit_of_measurement: "$/kWh"
+        state: "0.16907"
+
+      - name: "Electricity Import Rate Shoulder"
+        unique_id: electricity_import_rate_shoulder
+        icon: mdi:cash-minus
+        unit_of_measurement: "$/kWh"
+        state: "0.16907"
+
+      - name: "Electricity Import Rate Off Peak"
+        unique_id: electricity_import_rate_off_peak
+        icon: mdi:cash-minus
+        unit_of_measurement: "$/kWh"
+        state: "0.16907"
+
+      - name: "Electricity Export Rate"
+        unique_id: electricity_export_rate
+        icon: mdi:cash-plus
+        unit_of_measurement: "$/kWh"
+        state: "0.05000"
+
+      - name: "Electricity Supply Charge"
+        unique_id: electricity_supply_charge
+        icon: mdi:cash-plus
+        unit_of_measurement: "$/day"
+        state: "1.04863"
+
+      - name: "Electricity Total Cost Daily"
+        unique_id: electricity_total_cost_daily
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.electricity_supply_charge') | float(0) %}
+          {% set offpeak = states('sensor.solar_imported_power_daily_off_peak') | float(0) * states('sensor.electricity_import_rate_off_peak') | float(0) %}
+          {% set shoulder = states('sensor.solar_imported_power_daily_shoulder') | float(0) * states('sensor.electricity_import_rate_shoulder') | float(0) %}
+          {% set peak = states('sensor.solar_imported_power_daily_peak') | float(0) * states('sensor.electricity_import_rate_peak') | float(0) %}
+          {% set feedintariff = states('sensor.solar_exported_power_daily') | float(0) * states('sensor.electricity_export_rate') | float(0) %}
+          {% set t = now() %}
+          {% if t.month in [4,5,9,10] %}
+            {% set demandrate = states('sensor.electricity_import_rate_low_demand') | float(0) %}
+          {% else %}
+            {% set demandrate = states('sensor.electricity_import_rate_high_demand') | float(0) %}
+          {% endif %}
+          {% set demand = states('input_number.electricity_demand_max') | float (0) * 2 * demandrate %}
+          {{ (supply + offpeak + shoulder + peak - feedintariff) | round(2) }}
+
+      - name: Total Import Cost Daily
+        icon: mdi:currency-usd
+        state_class: total_increasing
+        device_class: monetary
+        unit_of_measurement: $
+        state: >
+          {% set supply = states('sensor.electricity_supply_charge') | float(0) %}
+          {% set offpeak = states('sensor.solar_imported_power_daily_off_peak') | float(0) * states('sensor.electricity_import_rate_off_peak') | float(0) %}
+          {% set shoulder = states('sensor.solar_imported_power_daily_shoulder') | float(0) * states('sensor.electricity_import_rate_shoulder') | float(0) %}
+          {% set peak = states('sensor.solar_imported_power_daily_peak') | float(0) * states('sensor.electricity_import_rate_peak') | float(0) %}
+          {{ (supply + offpeak + shoulder + peak) | round(2) }}
+
+      - name: "Electricity Total Cost Monthly"
+        unique_id: electricity_total_cost_monthly
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.electricity_supply_charge') | float(0) * now().day %}
+          {% set offpeak = states('sensor.solar_imported_power_monthly_off_peak') | float(0) * states('sensor.electricity_import_rate_off_peak') | float(0) %}
+          {% set shoulder = states('sensor.solar_imported_power_monthly_shoulder') | float(0) * states('sensor.electricity_import_rate_shoulder') | float(0) %}
+          {% set peak = states('sensor.solar_imported_power_monthly_peak') | float(0) * states('sensor.electricity_import_rate_peak') | float(0) %}
+          {% set feedintariff = states('sensor.solar_exported_power_monthly') | float(0) * states('sensor.electricity_export_rate') | float(0) %}
+          {% set t = now() %}
+          {% if t.month in [4,5,9,10] %}
+            {% set demandrate = states('sensor.electricity_import_rate_low_demand') | float(0) %}
+          {% else %}
+            {% set demandrate = states('sensor.electricity_import_rate_high_demand') | float(0) %}
+          {% endif %}
+          {% set demand = states('input_number.electricity_demand_max') | float (0) * 2 * demandrate * ( now().day + states('sensor.days_remaining_in_month') | int(0) ) %}
+          {{ (supply + offpeak + shoulder + peak + demand - feedintariff) | round(2) }}
+
+      - name: "Electricity Total Cost Yearly"
+        unique_id: electricity_total_cost_yearly
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.electricity_supply_charge') | float(0) * ( states('sensor.days_passed_in_year') | int(0) + 1 ) %}
+          {% set offpeak = states('sensor.solar_imported_power_yearly_off_peak') | float(0) * states('sensor.electricity_import_rate_off_peak') | float(0) %}
+          {% set shoulder = states('sensor.solar_imported_power_yearly_shoulder') | float(0) * states('sensor.electricity_import_rate_shoulder') | float(0) %}
+          {% set peak = states('sensor.solar_imported_power_yearly_peak') | float(0) * states('sensor.electricity_import_rate_peak') | float(0) %}
+          {% set feedintariff = states('sensor.solar_exported_power_yearly') | float(0) * states('sensor.electricity_export_rate') | float(0) %}
+          {% set highdemandrate = states('sensor.electricity_import_rate_high_demand') | float(0) %}
+          {% set lowdemandrate = states('sensor.electricity_import_rate_low_demand') | float(0) %}
+          {% set demand = ( states('sensor.electricity_demand_max_monthly_1')| float (0) * 31 + states('sensor.electricity_demand_max_monthly_2') | float (0) * 28 + states('sensor.electricity_demand_max_monthly_3') | float (0) * 31 + states('sensor.electricity_demand_max_monthly_6') | float (0) * 30 + states('sensor.electricity_demand_max_monthly_7') | float (0) * 31 + states('sensor.electricity_demand_max_monthly_8') | float (0) * 31 + states('sensor.electricity_demand_max_monthly_11') | float (0) * 30 + states('sensor.electricity_demand_max_monthly_12') | float (0) * 31 ) * 2 * highdemandrate + ( states('sensor.electricity_demand_max_monthly_4') | float (0) * 30 + states('sensor.electricity_demand_max_monthly_5') | float (0) * 31 + states('sensor.electricity_demand_max_monthly_9') | float (0) * 30 + states('sensor.electricity_demand_max_monthly_10') | float (0) * 31 ) * 2 * lowdemandrate %} 
+          {{ (supply + offpeak + shoulder + peak + demand - feedintariff) | round(2) }}
+
+      - name: "Electricity Demand Max"
+        unique_id: electricity_demand_max_sensor
+        unit_of_measurement: kWh
+        state: "{{ states('input_number.electricity_demand_max') |float(0) }}"
+        # availability: "{{ states('input_number.electricity_demand_max')|float(-1) >= 0 }}"
+
+      - name: "Electricity Demand Monthly Cost"
+        unique_id: electricity_demand_monthly_cost
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set t = now() %}
+          {% if t.month in [4,5,9,10] %}
+            {% set demandrate = states('sensor.electricity_import_rate_low_demand') | float(0) %}
+          {% else %}
+            {% set demandrate = states('sensor.electricity_import_rate_high_demand') | float(0) %}
+          {% endif %}
+          {{states('input_number.electricity_demand_max') | float (0) * 2 * demandrate * ( now().day + states('sensor.days_remaining_in_month') | float(0)) }}
+
+utility_meter:
+  # https://crontab.guru/#0,30_*_*_*_*
+  electricity_imported_demand:
+    source: sensor.solar_imported_power_kwh
+    name: Electricity Imported Demand
+    cron: 0,30 * * * *
+    tariffs:
+      - high-demand
+      - low-demand
+      - no-demand
+
+  electricity_demand_max_monthly:
+    source: sensor.electricity_demand_max
+    name: Electricity Demand Max Monthly
+    cycle: yearly
+    tariffs:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      - 11
+      - 12
+
+input_number:
+  electricity_demand_max:
+    name: Electricity Demand Max Value
+    # initial: 0 # don't use initial as it will reset upon restart
+    min: 0
+    max: 20
+    step: 0.001

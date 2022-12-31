@@ -1,0 +1,77 @@
+template:
+  - sensor:
+      - name: Gas Consumption M3
+        unique_id: gas_consumption_m3
+        state: "{{ states('counter.gas_counter') | float(0) * 0.01 }}"
+        unit_of_measurement: "m³"
+        icon: mdi:fire
+        device_class: gas
+        state_class: total_increasing
+      - name: Gas Consumption MJ
+        unique_id: gas_consumption_mj
+        state: "{{ states('sensor.gas_consumption_m3') | float(0) * 37 }}"
+        unit_of_measurement: "MJ"
+        icon: mdi:fire
+        device_class: gas
+        state_class: total_increasing
+
+      - name: Gas Import Rate MJ
+        unique_id: gas_import_rate_mj
+        icon: mdi:cash-minus
+        unit_of_measurement: "AUD/MJ"
+        state: "0.031218"
+      - name: Gas Import Rate M3
+        unique_id: gas_import_rate_m3
+        icon: mdi:cash-minus
+        unit_of_measurement: "AUD/m³"
+        state: "{{ states('sensor.gas_import_rate_mj') | float(0) * 37 }}"
+      - name: Gas Supply Charge
+        unique_id: gas_supply_charge
+        icon: mdi:cash-minus
+        unit_of_measurement: "AUD"
+        state: "0.65142"
+
+      - name: "Gas Total Cost Daily"
+        unique_id: gas_total_cost_daily
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.gas_supply_charge') | float(0) %}
+          {% set usage = states('sensor.gas_consumption_daily') | float(0) * states('sensor.gas_import_rate_m3') | float(0) %}
+          {{ (supply + usage) | round(2) }}
+      - name: "Gas Total Cost Monthly"
+        unique_id: gas_total_cost_monthly
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.gas_supply_charge') | float(0) * now().day %}
+          {% set usage = states('sensor.gas_consumption_monthly') | float(0) * states('sensor.gas_import_rate_m3') | float(0) %}
+          {{ (supply + usage) | round(2) }}
+      - name: "Gas Total Cost Yearly"
+        unique_id: gas_total_cost_yearly
+        icon: mdi:currency-usd
+        unit_of_measurement: $
+        state_class: total
+        device_class: monetary
+        state: >
+          {% set supply = states('sensor.gas_supply_charge') | float(0) * ( states('sensor.days_passed_in_year') | int(0) + 1 ) %}
+          {% set usage = states('sensor.gas_consumption_yearly') | float(0) * states('sensor.gas_import_rate_m3') | float(0) %}
+          {{ (supply + usage) | round(2) }}
+
+utility_meter:
+  gas_consumption_daily:
+    source: sensor.gas_consumption_m3
+    name: Gas Consumption Daily
+    cycle: daily
+  gas_consumption_monthly:
+    source: sensor.gas_consumption_m3
+    name: Gas Consumption Monthly
+    cycle: monthly
+  gas_consumption_yearly:
+    source: sensor.gas_consumption_m3
+    name: Gas Consumption Yearly
+    cycle: yearly

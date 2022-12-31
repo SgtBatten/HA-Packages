@@ -1,0 +1,324 @@
+template:
+  - sensor:
+      - name: "Solar Self Consumption Ratio"
+        unique_id: solar_self_consumption_ratio
+        icon: mdi:percent-outline
+        state: >
+          {% if ((states('sensor.solar_panel_production_daily_total') | float(0)) <= 0) %}
+            0
+          {% else %}
+            {{((((states('sensor.solar_house_consumption_daily_total') | float(0)) - (states('sensor.solar_imported_power_daily_total') | float(0))) / (states('sensor.solar_panel_production_daily_total') | float(0)) ) * 100 ) | round (0)}}
+          {% endif %}
+      - name: "Solar Self Sufficiency Ratio"
+        unique_id: solar_self_sufficiency_ratio
+        icon: mdi:percent-outline
+        state: >
+          {% if ((states('sensor.solar_house_consumption_daily_total') | float(0)) <= 0) %}
+            0
+          {% else %}
+            {{((1 - ((states('sensor.solar_imported_power_daily_total') | float(0)) / (states('sensor.solar_house_consumption_daily_total') | float(0)))) * 100 ) | round (0)}}   
+          {% endif %}
+
+      - name: "Solar Inverter Effectiveness"
+        unique_id: solar_inverter_effectiveness
+        icon: mdi:percent-outline
+        unit_of_measurement: "%"
+        state: >
+          {% if ((states('sensor.solaredge_dc_power') | float(0)) < 100) or ((states('sensor.solaredge_ac_power') | float(0)) < 100)%}
+            {{(states('sensor.solar_inverter_effectiveness'))}}
+          {% else %}
+            {% if is_state('sensor.solar_inverter_effectiveness', 'unknown') %}
+              1
+            {% elif ((states('sensor.solaredge_ac_power') | float(0)) <= 0) %}
+              {{(states('sensor.solar_inverter_effectiveness'))}}
+            {% elif ((states('sensor.solaredge_dc_power') | float(0)) <= 0) %}
+              {{(states('sensor.solar_inverter_effectiveness'))}}
+            {% else %}
+              {{(states('sensor.solaredge_ac_power') | float(0)) / (states('sensor.solaredge_dc_power') | float(0))}}
+            {% endif %}
+          {% endif %}
+
+      - name: "Solar Panel Production W"
+        unique_id: solar_panel_production_w
+        unit_of_measurement: "W"
+        icon: mdi:solar-power
+        state: >
+          {% if ((states('sensor.solaredge_dc_power') | float(0)) <= 0) %}
+            0
+          {% elif (is_state('sensor.solaredge_dc_power', 'unknown')) %}
+            0
+          {% else %}
+            {{ (states('sensor.solaredge_dc_power') | float(0)) }}
+          {% endif %}
+
+      - name: "Solar Panel To House W"
+        unique_id: solar_panel_to_house_w
+        unit_of_measurement: "W"
+        icon: mdi:solar-power
+        state: >
+          {% if ((states('sensor.solaredge_m1_ac_power') | float(0)) > 0) %}
+            {{(states('sensor.solaredge_ac_power') | float(0) - states('sensor.solaredge_m1_ac_power') | float(0))}}
+          {% elif ((states('sensor.solaredge_m1_ac_power') | float(0)) < 0) %}
+            {{states('sensor.solaredge_ac_power') | float(0)}}
+          {% elif ((states('sensor.solaredge_dc_power') | float(0)) < 0)%}
+            0
+          {% else %}
+            {{((states('sensor.solaredge_dc_power') | float(0))) * (states('sensor.solar_inverter_effectiveness') | float(0))}} 
+          {% endif %}
+
+      - name: "Solar Panel To Grid W"
+        unique_id: solar_panel_to_grid_w
+        unit_of_measurement: "W"
+        icon: mdi:solar-power
+        state: >
+          {% if ((states('sensor.solaredge_m1_ac_power') | float(0)) > 0) %}
+            {{(states('sensor.solaredge_m1_ac_power') | float(0))}}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Solar Grid To House W"
+        unique_id: solar_grid_to_house_w
+        unit_of_measurement: "W"
+        icon: mdi:transmission-tower-export
+        state: >
+          {% if ((states('sensor.solaredge_m1_ac_power') | float(0)) <= 0) %}
+            {{((states('sensor.solaredge_m1_ac_power') | float(0)) *-1)}}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Solar House Consumption W"
+        unique_id: solar_house_consumption_w
+        unit_of_measurement: "W"
+        icon: mdi:home
+        state: >
+          {{(states('sensor.solar_panel_to_house_w') | float(0)) + (states('sensor.solar_grid_to_house_w') | float(0))}}
+
+      - name: "Solar Imported Power W"
+        unique_id: solar_imported_power_w
+        unit_of_measurement: "W"
+        icon: mdi:transmission-tower-export
+        state: >
+          {% if ((states('sensor.solaredge_m1_ac_power') | float(0)) <= 0) %}
+            {{((states('sensor.solaredge_m1_ac_power') | float(0)) *-1)}}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Solar Exported Power W"
+        unique_id: solar_exported_power_w
+        unit_of_measurement: "W"
+        icon: mdi:transmission-tower-import
+        state: >
+          {% if ((states('sensor.solaredge_m1_ac_power') | float(0)) > 0) %}
+            {{(states('sensor.solaredge_m1_ac_power') | float(0))}}
+          {% else %}
+            0
+          {% endif %}
+
+      - name: "Solar Lifetime Production"
+        unique_id: solar_lifetime_production
+        unit_of_measurement: "MWh"
+        icon: mdi:solar-power
+        state: >
+          {{(((states('sensor.solaredge_ac_energy_kwh') | float(0)) / 1000) | round (2))}}
+
+      ##############################################################
+      # CUSTOM STUFF ############
+
+      - name: "Solar Inverter Effectiveness Int"
+        unique_id: solar_inverter_effectiveness_int
+        icon: mdi:percent-outline
+        unit_of_measurement: "%"
+        state: >
+          {{ ((states('sensor.solar_inverter_effectiveness') | float(0)) * 100) | round(2) }}
+
+      - name: "Solar Inverter Effectiveness Average Int"
+        unique_id: solar_inverter_effectiveness_average_int
+        icon: mdi:percent-outline
+        unit_of_measurement: "%"
+        state: >
+          {{ ((states('sensor.solar_inverter_effectiveness_average') | float(0)) * 100) | round(2) }}
+
+        ################## END CUSTOM #########################################
+sensor:
+  - platform: integration
+    source: sensor.solar_panel_production_w
+    method: left
+    unit_prefix: k
+    name: solar_panel_production_kwh
+  - platform: integration
+    source: sensor.solar_house_consumption_w
+    method: left
+    unit_prefix: k
+    name: solar_house_consumption_kwh
+  - platform: integration
+    source: sensor.solar_imported_power_w
+    method: left
+    unit_prefix: k
+    name: solar_imported_power_kwh
+  - platform: integration
+    source: sensor.solar_exported_power_w
+    method: left
+    unit_prefix: k
+    name: solar_exported_power_kwh
+  - platform: integration
+    source: sensor.solar_panel_to_house_w
+    method: left
+    unit_prefix: k
+    name: solar_panel_to_house_kwh
+
+  - platform: statistics
+    name: "Solar Inverter Effectiveness Average"
+    unique_id: solar_inverter_effectiveness_average
+    state_characteristic: mean
+    sampling_size: 1200
+    max_age:
+      hours: 24
+    entity_id: sensor.solar_inverter_effectiveness
+
+utility_meter:
+  solar_panel_production_daily:
+    source: sensor.solar_panel_production_kwh
+    name: Solar Panel Production Daily
+    cycle: daily
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_panel_production_daily_total:
+    source: sensor.solar_panel_production_kwh
+    name: Solar Panel Production Daily Total
+    cycle: daily
+  solar_house_consumption_daily:
+    source: sensor.solar_house_consumption_kwh
+    name: Solar House Consumption Daily
+    cycle: daily
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_house_consumption_daily_total:
+    source: sensor.solar_house_consumption_kwh
+    name: Solar House Consumption Daily Total
+    cycle: daily
+  solar_imported_power_daily:
+    source: sensor.solar_imported_power_kwh
+    name: Solar Imported Power Daily
+    cycle: daily
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_imported_power_daily_total:
+    source: sensor.solar_imported_power_kwh
+    name: Solar Imported Power Daily Total
+    cycle: daily
+  solar_exported_power_daily:
+    source: sensor.solar_exported_power_kwh
+    name: Solar Exported Power Daily
+    cycle: daily
+  solar_panel_to_house_daily:
+    source: sensor.solar_panel_to_house_kwh
+    name: Solar Panel To House Daily
+    cycle: daily
+
+  # solar_panel_to_house_weekly:
+  #   source: sensor.solar_panel_to_house_kwh
+  #   name: Solar Panel To House Weekly
+  #   cycle: weekly
+  # solar_imported_power_weekly:
+  #   source: sensor.solar_imported_power_kwh
+  #   name: Solar Imported Power Weekly
+  #   cycle: weekly
+  #   tariffs:
+  #     - peak
+  #     - shoulder
+  #     - off-peak
+  # solar_house_consumption_weekly:
+  #   source: sensor.solar_house_consumption_kwh
+  #   name: Solar House Consumption Weekly
+  #   cycle: weekly
+  #   tariffs:
+  #     - peak
+  #     - shoulder
+  #     - off-peak
+  # solar_panel_production_weekly:
+  #   source: sensor.solar_panel_production_kwh
+  #   name: Solar Panel Production Weekly
+  #   cycle: weekly
+  #   tariffs:
+  #     - peak
+  #     - shoulder
+  #     - off-peak
+  # solar_exported_power_weekly:
+  #   source: sensor.solar_exported_power_kwh
+  #   name: Solar Exported Power Weekly
+  #   cycle: weekly
+
+  solar_panel_to_house_monthly:
+    source: sensor.solar_panel_to_house_kwh
+    name: Solar Panel To House Monthly
+    cycle: monthly
+  solar_imported_power_monthly:
+    source: sensor.solar_imported_power_kwh
+    name: Solar Imported Power Monthly
+    cycle: monthly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_house_consumption_monthly:
+    source: sensor.solar_house_consumption_kwh
+    name: Solar House Consumption Monthly
+    cycle: monthly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_panel_production_monthly:
+    source: sensor.solar_panel_production_kwh
+    name: Solar Panel Production Monthly
+    cycle: monthly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_exported_power_monthly:
+    source: sensor.solar_exported_power_kwh
+    name: Solar Exported Power Monthly
+    cycle: monthly
+
+  solar_panel_to_house_yearly:
+    source: sensor.solar_panel_to_house_kwh
+    name: Solar Panel To House Yearly
+    cycle: yearly
+  solar_imported_power_yearly:
+    source: sensor.solar_imported_power_kwh
+    name: Solar Imported Power Yearly
+    cycle: yearly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_house_consumption_yearly:
+    source: sensor.solar_house_consumption_kwh
+    name: Solar House Consumption Yearly
+    cycle: yearly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_panel_production_yearly:
+    source: sensor.solar_panel_production_kwh
+    name: Solar Panel Production Yearly
+    cycle: yearly
+    tariffs:
+      - peak
+      - shoulder
+      - off-peak
+  solar_exported_power_yearly:
+    source: sensor.solar_exported_power_kwh
+    name: Solar Exported Power Yearly
+    cycle: yearly

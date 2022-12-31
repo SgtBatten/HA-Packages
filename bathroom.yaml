@@ -1,0 +1,25 @@
+sensor:
+  - platform: statistics
+    name: Main Bathroom Humidity Average Linear 24h
+    entity_id: sensor.weather_sensor_bathroom_humidity
+    state_characteristic: average_linear
+    max_age:
+      hours: 24
+
+template:
+  - binary_sensor:
+      - name: Main Bathroom Humidity Threshold
+        state: >-
+          {% set humid = states('sensor.weather_sensor_bathroom_humidity')|int(0) %}
+          {% set avg = states('sensor.main_bathroom_humidity_average_linear_24h')|int(0) %}
+          {% set threshold = 5 %}
+          {{ (humid - avg) > threshold }}
+
+binary_sensor:
+  - platform: trend
+    sensors:
+      main_bathroom_humidity_trend:
+        entity_id: sensor.weather_sensor_bathroom_humidity
+        friendly_name: Main Bathroom Humidity Trend
+        min_gradient: 0.05
+        device_class: moisture

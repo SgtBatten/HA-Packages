@@ -1,0 +1,103 @@
+#### LG THINQ APPLIANCES ##############################################################
+#### Source: https://github.com/ShunichiSan/HomeAssistantApplianceCard
+#######################################################################################
+template:
+  - sensor:
+      # - name: Dishwasher State
+      #   state: '{{ state_attr("sensor.dishwasher", "run_state") }}'
+      #   icon: mdi:dishwasher
+      - name: Dishwasher Program Length
+        state: >-
+          {% set dishwasherprogramminutes = (states.sensor.lg_dishwasher.attributes.initial_time.split(':')[0]|int * 60) + (states.sensor.lg_dishwasher.attributes.initial_time.split(':')[1] | int) %}
+          {{ dishwasherprogramminutes }}
+        icon: mdi:dishwasher
+      - name: Dishwasher Remaining Time
+        state: >-
+          {% set dishwasherremainminutes = (states.sensor.lg_dishwasher.attributes.remain_time.split(':')[0]|int * 60) + (states.sensor.lg_dishwasher.attributes.remain_time.split(':')[1] | int) %}
+          {{ (dishwasherremainminutes// 60)}}:{{'{:0>2d}'.format(dishwasherremainminutes%60) }}
+        icon: mdi:dishwasher
+      - name: "Dishwasher Progress"
+        state: >-
+          {% set dishwasherremainminutes = (states.sensor.lg_dishwasher.attributes.remain_time.split(':')[0]|int * 60) + (states.sensor.lg_dishwasher.attributes.remain_time.split(':')[1] | int) %}
+          {% if (states.sensor.dishwasher_program_length.state | int) < 1 %}
+            0
+          {% else %}          
+            {% set dishwasherprogress = (100 - (((dishwasherremainminutes) / (states('sensor.dishwasher_program_length') | int)) * 100)) %}
+            {{ dishwasherprogress }}
+          {% endif %}
+        icon: mdi:dishwasher
+
+      # - name: Washer State
+      #   state: >
+      #     {% if states.sensor.dryer_progress.state > 0 %}
+      #       {% if states.sensor.NAMEOFPOWERSENSOR.state > 0 %}
+      #         Washing
+      #       {% else %}
+      #         Off
+      #     {% else %}
+      #       {% if states.sensor.NAMEOFPOWERSENSOR.state > 0 %}
+      #         Washing
+      #       {% else if states.sensor.NAMEOFPOWERSENSOR.state > 0 %}
+      #         Spinning
+      #       {% else %}
+      #         Off
+      #       {% endif %}
+      #     {% endif %}
+      #   icon: mdi:washing-machine
+      # - name: Washer Program Length
+      #   state: >
+      #     150
+      #   icon: mdi:washing-machine
+      # - name: 'Washer Remaining Time'
+      #   state: >-
+      #     {% set washerremainminutes = (states.sensor.washer_program_length.state | int(0) ) %}
+      #     {{ (washerremainminutes// 60)}}:{{'{:0>2d}'.format(washerremainminutes%60) }}
+      #   icon: mdi:washing-machine
+      # - name : 'Washer Progress'
+      #   state: >-
+      #     {% if (states.sensor.washer_program_length.state | int) < 1 %}
+      #     0
+      #     {% else %}
+      #     {% set washerprogress = (100 - (((states.sensor.washer_remaining_time.state | int) / (states.sensor.washer_program_length.state | int)) * 100)) %}
+      #     {{ washerprogress }}
+      #     {% endif %}
+      #   icon: mdi:washing-machine
+
+      - name: Dryer State
+        state: >
+          {% if states('sensor.electrolux_dryer_td1_cyclephase') | lower == "unavailable" %}
+            Off
+          {% else %}
+            {{ states('sensor.electrolux_dryer_td1_cyclephase')}}ing
+          {% endif %}
+        icon: mdi:tumble-dryer
+      # - name: Dryer Program Length
+      #   state: >
+      #     {{states.input_number.dryer_program_length.state | int}}
+      #   icon: mdi:tumble-dryer
+      - name: Dryer Remaining Time
+        state: >-
+          {% set dryerremainminutes = states('sensor.electrolux_dryer_td1_timetoend') | int(0) %}
+          {% if dryerremainminutes >= 1 %}
+          {{ (dryerremainminutes// 60)}}:{{'{:0>2d}'.format(dryerremainminutes%60) }}
+          {% else %}
+          0:00
+          {% endif %}
+        icon: mdi:tumble-dryer
+      - name: Dryer Progress
+        state: >-
+          {% set dryerprogress = (100 - (((states('sensor.electrolux_dryer_td1_timetoend') | int(0)) / (states('input_number.dryer_program_length') | int(120))) * 100)) %}
+          {% if (states('input_number.dryer_program_length') | int(0)) < 1 or dryerprogress <= 0 %}
+          0
+          {% else %}
+          {{ dryerprogress}}
+          {% endif %}
+        icon: mdi:tumble-dryer
+
+input_number:
+  dryer_program_length:
+    name: Dryer Program Length
+    min: 60
+    max: 300
+    step: 1
+    icon: mdi:tumble-dryer

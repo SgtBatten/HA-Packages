@@ -1,0 +1,175 @@
+#### COMBINED MOTION/LOCK SENSORS #####################################################
+#### Source: https://community.home-assistant.io/t/wildcard-entities-card/72969/3
+#######################################################################################
+template:
+  - sensor:
+      - name: Motion Summary
+        state: >
+          {%-for state in states.binary_sensor
+            if(state.attributes.device_class=="motion" and state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                  {%-for state in states.binary_sensor if(state.attributes.device_class=="motion" and state.state =="on")-%}
+                    {{state.name | replace('Motion Sensor', '') | replace('Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
+                  {%-endfor-%}
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              No motion
+          {%-endfor-%}
+        icon: >
+          {%-for state in states.binary_sensor
+            if(state.attributes.device_class=="motion" and state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:run-fast
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:motion-sensor-off
+          {%-endfor-%}
+
+      # DOORS
+      - name: Door Summary
+        state: >
+          {%-for state in states.binary_sensor
+            if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                  {%-for state in states.binary_sensor if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state =="on")-%}
+                    {{state.name}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} open{%endif-%}
+                  {%-endfor-%}
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              All closed
+          {%-endfor-%}
+        icon: >
+          {%-for state in states.binary_sensor
+            if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:door-open
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:door-closed
+          {%-endfor-%}
+        attributes:
+          count: |-
+            {%-for state in states.binary_sensor
+              if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
+                {%-if loop.last-%}
+                  {%-if loop.index > 0-%}
+                    {{ loop.length }}
+                  {%-endif-%}
+                {%-endif-%}
+              {%-else-%}
+                0
+            {%-endfor-%}
+
+        # LIGHTS
+      - name: Light Summary
+        state: >
+          {%-for state in states.light
+            if(state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                  {%-for state in states.light if(state.state =="on")-%}
+                    {{state.name}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
+                  {%-endfor-%}
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              All off
+          {%-endfor-%}
+        icon: >
+          {%-for state in states.light
+            if(state.state=="on")-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:lightbulb-on
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:lightbulb-off
+          {%-endfor-%}
+        attributes:
+          count: |-
+            {%-for state in states.light
+              if(state.state=="on")-%}
+                {%-if loop.last-%}
+                  {%-if loop.index > 0-%}
+                    {{ loop.length }}
+                  {%-endif-%}
+                {%-endif-%}
+              {%-else-%}
+                0
+            {%-endfor-%}
+
+        # CLIMATE
+      - name: Climate Summary
+        state: >
+          {%-for state in states.climate
+            if not state.state=="off" and not state.state=="unavailable"-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                  {%-for state in states.climate if not state.state =="off" and not state.state=="unavailable" -%}
+                    {{state.name | replace('A/C', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
+                  {%-endfor-%}
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              All off
+          {%-endfor-%}
+        icon: >
+          {%-for state in states.climate
+            if not state.state=="off" and not state.state=="unavailable"-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:air-conditioner
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:hvac-off
+          {%-endfor-%}
+        attributes:
+          count: |-
+            {%-for state in states.climate
+              if not state.state=="off" and not state.state=="unavailable"-%}
+                {%-if loop.last-%}
+                  {%-if loop.index > 0-%}
+                    {{ loop.length }}
+                  {%-endif-%}
+                {%-endif-%}
+              {%-else-%}
+                0
+            {%-endfor-%}
+
+      #### LOW BATTERY SENSOR ###############################################################
+      #### Source: https://community.home-assistant.io/t/wildcard-entities-card/72969/3
+      #######################################################################################
+      - name: Low Battery Summary
+        state: >
+          {%-for state in states.sensor if(state.attributes.device_class=="battery" and state.state | int(0) <= 25)-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                  {%-for state in states.sensor if(state.attributes.device_class=="battery" and state.state | int(0) <= 25)-%}
+                    {{state.name | replace('Battery Level', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} low{%endif-%}
+                  {%-endfor-%}
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              Everything is charged
+          {%-endfor-%}
+        icon: >
+          {%-for state in states.sensor
+            if(state.attributes.device_class=="battery" and state.state | int(0) <= 25)-%}
+              {%-if loop.last-%}
+                {%-if loop.index > 0-%}
+                    mdi:battery-10
+                {%-endif-%}
+              {%-endif-%}
+            {%-else-%}
+              mdi:battery
+          {%-endfor-%}

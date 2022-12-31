@@ -1,0 +1,29 @@
+sensor:
+  - platform: statistics
+    name: Average power to grid
+    entity_id: sensor.solaredge_m1_ac_power
+    state_characteristic: average_linear
+    max_age:
+      minutes: 1
+
+input_number:
+  demand_warning_threshold:
+    name: Demand Warning Threshold
+    min: 0
+    max: 1
+    step: 0.01
+    mode: box
+
+template:
+  - binary_sensor:
+      - name: Electricity Import Exceeds Max Demand
+        state: >-
+          {% if states('select.electricity_imported_demand') in ['low-demand','high-demand'] %}
+            {% set min_remaining = 30 - now().minute if now().minute < 30 else 60 - now().minute %}
+            {% set current_usage = (states('sensor.electricity_imported_demand_high_demand') + states('sensor.electricity_imported_demand_low_demand')) | float(0) * 1000 %}
+            {% set forecast_usage = states('sensor.average_power_to_grid')|float(0) / -30 %}
+            {% set threshold = states('input_number.demand_warning_threshold')|float(0.9) %}
+            {{ current_usage + forecast_usage * min_remaining > states('sensor.electricity_demand_max')|float(0) * 1000 * threshold }}
+          {% else %}
+            False
+          {% endif %}

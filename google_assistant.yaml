@@ -1,0 +1,44 @@
+google_assistant:
+  project_id: !secret google_project_id
+  service_account: !include /config/SERVICE_ACCOUNT.json
+  report_state: true
+  secure_devices_pin: !secret secure_devices_pin
+  expose_by_default: true
+  exposed_domains:
+    #   - switch
+    - light
+    - climate
+    - lock
+    - fan
+  entity_config:
+    ### HEY GOOGLE, SYNC MY DEVICES
+    #   switch.kitchen:
+    #     name: CUSTOM_NAME_FOR_GOOGLE_ASSISTANT
+    #     aliases:
+    #       - BRIGHT_LIGHTS
+    #       - ENTRY_LIGHTS
+    light.garage:
+      expose: false
+    light.garage_2:
+      expose: false
+    light.bedside_lamps:
+      aliases:
+        - READING_LIGHTS
+        - READING_LAMPS
+        - BEDSIDE_LIGHTS
+        - PENDANTS
+    light.switch_house_number:
+      aliases:
+        - STREET_LIGHT
+        - FRONT_GARDEN_LIGHT
+        - FRONT_LIGHT
+    # light.tab_s:
+    #   expose: false
+    # light.travs_pc:
+    #   expose: false
+    switch.holiday_mode:
+      expose: true
+    switch.tradie_mode:
+      expose: true
+    switch.heater_mode:
+      expose: true

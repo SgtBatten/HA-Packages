@@ -1,0 +1,28 @@
+frontend:
+  themes: !include_dir_merge_named /config/themes
+  extra_module_url:
+    - /local/ThemeOverride.js
+
+input_select:
+  theme:
+    options:
+      - blue-red
+      - dark-blue
+      - dark-green
+      - light-blue
+      - light-green
+      - orange
+      - red
+    icon: mdi:format-color-fill
+  themes:
+    name: "Themes"
+    icon: mdi:format-paint
+    options:
+      - whatsapp_theme
+
+input_boolean:
+  dark_mode:
+    name: Dark mode
+    icon: mdi:theme-light-dark
+  theme_alternative:
+    name: Theme alternative (disable active state color)

@@ -1,0 +1,146 @@
+input_number:
+  auto_off_timer:
+    name: A/C Auto Off
+    initial: 60
+    min: 30
+    max: 300
+    step: 30
+    mode: box
+
+#### Kogan heater toggle high and low
+#######################################################################################
+
+input_boolean:
+  heater_toggle_mode:
+
+switch:
+  - platform: template
+    switches:
+      heater_mode:
+        value_template: >-
+          {% if is_state('input_boolean.heater_toggle_mode','on') %} On {%
+          else %} Off {% endif %}
+        friendly_name: Heater (High/Low)
+        icon_template: |-
+          {% if is_state('input_boolean.heater_toggle_mode','on') %}
+            mdi:thermometer-chevron-up
+          {% else %}
+            mdi:thermometer-chevron-down
+          {% endif %}
+        turn_on:
+          - service: scene.turn_on
+            data:
+              entity_id: scene.jude_s_heater_high
+          - service: input_boolean.turn_on
+            data:
+              entity_id: input_boolean.heater_toggle_mode
+        turn_off:
+          - service: scene.turn_on
+            data:
+              entity_id: scene.jude_s_heater_low
+          - service: input_boolean.turn_off
+            data:
+              entity_id: input_boolean.heater_toggle_mode
+
+#### A/C AUTOMATION SENSORS ###########################################################
+#### Source: https://community.home-assistant.io/t/a-c-automation/110159
+#######################################################################################
+sensor:
+  - platform: template
+    sensors:
+      living_temp:
+        friendly_name: "Living Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        value_template: "{{ state_attr('climate.living', 'current_temperature') }}"
+
+      bed_1_temp:
+        friendly_name: "Bed 1 Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        value_template: "{{ state_attr('climate.bed_1', 'current_temperature') }}"
+
+      bed_2_temp:
+        friendly_name: "Bed 2 Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        value_template: "{{ state_attr('climate.bed_2', 'current_temperature') }}"
+
+      bed_3_temp:
+        friendly_name: "Bed 3 Temperature"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        value_template: "{{ state_attr('climate.bed_3', 'current_temperature') }}"
+
+      in_duct_temp:
+        friendly_name: "Supply Temperature"
+        unit_of_measurement: "degrees"
+        value_template: "{{ state_attr('climate.izone_controller', 'supply_temperature') }}"
+
+      new_lambton_temp:
+        friendly_name: "BOM Temperature"
+        unit_of_measurement: "degrees"
+        value_template: "{{ state_attr('weather.new_lambton', 'temperature') }}"
+
+  #### A/C TEMP RANGE ###################################################################
+  #### Source: https://community.home-assistant.io/t/a-c-automation/110159
+  #######################################################################################
+
+  ## ON - bad zone temp ##
+binary_sensor:
+  - platform: threshold
+    name: living_temp_threshold_on
+    entity_id: sensor.living_temp
+    lower: 16
+    upper: 24
+    hysteresis: 0.0
+
+  - platform: threshold
+    entity_id: sensor.bed_1_temp
+    lower: 16
+    upper: 24
+    hysteresis: 0.0
+    name: bed_1_temp_threshold_on
+
+  - platform: threshold
+    entity_id: sensor.bed_2_temp
+    lower: 16
+    upper: 24
+    hysteresis: 0.0
+    name: bed_2_temp_threshold_on
+
+  ## OFF - good zone temp ##
+
+  - platform: threshold
+    entity_id: sensor.living_temp
+    lower: 19
+    upper: 22.5
+    hysteresis: 0.0
+    name: living_temp_threshold_off
+
+  - platform: threshold
+    entity_id: sensor.bed_1_temp
+    lower: 19.5
+    upper: 22.5
+    hysteresis: 0.0
+    name: bed_1_temp_threshold_off
+
+  - platform: threshold
+    entity_id: sensor.bed_2_temp
+    lower: 20
+    upper: 22.5
+    hysteresis: 0.0
+    name: bed_2_temp_threshold_off
+
+    # Next Alarm templates #
+  - platform: template
+    sensors:
+      trav_alarm_trigger_5min:
+        value_template: >-
+          {% set alarm_time = as_timestamp(states('sensor.pixel_7_pro_next_alarm')) %}
+          {% set time_now = as_timestamp(now() | default(0)) %}
+          {% if alarm_time != None %}
+            {{ time_now >= alarm_time - 900 }}
+          {% else %}
+            {{ unavailable }}
+          {% endif %}
