@@ -17,6 +17,12 @@ google_assistant:
     #     aliases:
     #       - BRIGHT_LIGHTS
     #       - ENTRY_LIGHTS
+    fan.bed_1_fan:
+      expose: false
+    fan.bed_2_fan:
+      expose: false
+    fan.bed_3_fan:
+      expose: false
     light.garage:
       expose: false
     light.garage_2:
