@@ -6,6 +6,19 @@ binary_sensor:
     remove_holidays:
       - "Bank Holiday"
 
+    # Next Alarm templates #
+  - platform: template
+    sensors:
+      trav_alarm_trigger_5min:
+        value_template: >-
+          {% set alarm_time = as_timestamp(states('sensor.pixel_7_pro_next_alarm')) %}
+          {% set time_now = as_timestamp(now() | default(0)) %}
+          {% if alarm_time != None %}
+            {{ time_now >= alarm_time - 900 }}
+          {% else %}
+            {{ unavailable }}
+          {% endif %}
+
 sensor:
   - platform: time_date
     display_options:
