@@ -65,7 +65,7 @@ template:
 
       - name: Total Import Cost Daily
         icon: mdi:currency-usd
-        state_class: total_increasing
+        state_class: total
         device_class: monetary
         unit_of_measurement: $
         state: >
