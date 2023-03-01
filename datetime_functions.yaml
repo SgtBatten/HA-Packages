@@ -16,7 +16,7 @@ binary_sensor:
           {% if alarm_time != 0 %}
             {{ time_now >= alarm_time - 900 }}
           {% else %}
-            {{ unavailable }}
+            unavailable
           {% endif %}
 
 sensor:
