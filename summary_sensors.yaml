@@ -5,107 +5,66 @@ template:
   - sensor:
       - name: Motion Summary
         state: >
-          {%-for state in states.binary_sensor
-            if(state.attributes.device_class=="motion" and state.state=="on")-%}
+          {%-for bs in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'eq', 'motion')|selectattr('state', 'eq', 'on')|selectattr('attributes.device_class', 'eq', 'motion') |map(attribute="name")|list
+            if bs-%}
               {%-if loop.last-%}
                 {%-if loop.index > 0-%}
-                  {%-for state in states.binary_sensor if(state.attributes.device_class=="motion" and state.state =="on")-%}
-                    {{state.name | replace('Motion Sensor', '') | replace('Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
-                  {%-endfor-%}
+                    {{ bs | replace(' Motion Sensor', '') | replace(' Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
                 {%-endif-%}
               {%-endif-%}
             {%-else-%}
               No motion
           {%-endfor-%}
         icon: >
-          {%-for state in states.binary_sensor
-            if(state.attributes.device_class=="motion" and state.state=="on")-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                    mdi:run-fast
-                {%-endif-%}
-              {%-endif-%}
-            {%-else-%}
-              mdi:motion-sensor-off
-          {%-endfor-%}
+          {% if states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'eq', 'motion')|selectattr('state', 'eq', 'on')|map(attribute="name")|list|length %}
+            mdi:run-fast
+          {%-else-%}
+            mdi:motion-sensor-off
+          {%-endif-%}
 
       # DOORS
       - name: Door Summary
         state: >
-          {%-for state in states.binary_sensor
-            if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
+          {%-for bs in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'search', 'door')|selectattr('state', 'eq', 'on') |map(attribute='name')|list
+            if bs -%}
               {%-if loop.last-%}
                 {%-if loop.index > 0-%}
-                  {%-for state in states.binary_sensor if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state =="on")-%}
-                    {{state.name}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} open{%endif-%}
-                  {%-endfor-%}
+                  {{bs}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} open{%endif-%}
                 {%-endif-%}
               {%-endif-%}
             {%-else-%}
-              All closed
+              All Closed
           {%-endfor-%}
         icon: >
-          {%-for state in states.binary_sensor
-            if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                    mdi:door-open
-                {%-endif-%}
-              {%-endif-%}
-            {%-else-%}
-              mdi:door-closed
-          {%-endfor-%}
+          {%- if states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'search', 'door')|selectattr('state', 'eq', 'on') |map(attribute='name')|list %}
+          mdi:door-open
+          {%-else-%}
+          mdi:door-closed
+          {%-endif-%}
         attributes:
-          count: |-
-            {%-for state in states.binary_sensor
-              if((state.attributes.device_class=="garage_door" or state.attributes.device_class=="door") and state.state=="on")-%}
-                {%-if loop.last-%}
-                  {%-if loop.index > 0-%}
-                    {{ loop.length }}
-                  {%-endif-%}
-                {%-endif-%}
-              {%-else-%}
-                0
-            {%-endfor-%}
+          count: "{{states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'search', 'door')|selectattr('state', 'eq', 'on') |map(attribute='name')|list|length}}"
 
         # LIGHTS
       - name: Light Summary
         state: >
-          {%-for state in states.light
-            if(state.state=="on")-%}
+          {% for light in states.light |selectattr('state', 'eq', 'on')|rejectattr('entity_id', 'search', 'infra_red_lights_in_night_mode')|map(attribute='name')|list
+            if light -%}
               {%-if loop.last-%}
                 {%-if loop.index > 0-%}
-                  {%-for state in states.light if(state.state =="on")-%}
-                    {{state.name}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
-                  {%-endfor-%}
+                  {{light}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
                 {%-endif-%}
               {%-endif-%}
             {%-else-%}
               All off
           {%-endfor-%}
         icon: >
-          {%-for state in states.light
-            if(state.state=="on")-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                    mdi:lightbulb-on
-                {%-endif-%}
-              {%-endif-%}
-            {%-else-%}
-              mdi:lightbulb-off
-          {%-endfor-%}
+          {%- if states.light |selectattr('state', 'eq', 'on')|rejectattr('entity_id', 'search', 'infra_red_lights_in_night_mode')|map(attribute='name')|list|length %}
+            mdi:lightbulb-on
+          {%-else-%}
+            mdi:lightbulb-off
+          {%-endif-%}
         attributes:
-          count: |-
-            {%-for state in states.light
-              if(state.state=="on")-%}
-                {%-if loop.last-%}
-                  {%-if loop.index > 0-%}
-                    {{ loop.length }}
-                  {%-endif-%}
-                {%-endif-%}
-              {%-else-%}
-                0
-            {%-endfor-%}
+          count: "{{states.light |selectattr('state', 'eq', 'on')|rejectattr('entity_id', 'search', 'infra_red_lights_in_night_mode')|map(attribute='name')|list|length }}"
 
         # CLIMATE
       - name: Climate Summary
