@@ -5,12 +5,10 @@ template:
   - sensor:
       - name: Motion Summary
         state: >
-          {%-for bs in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'eq', 'motion')|selectattr('state', 'eq', 'on')|selectattr('attributes.device_class', 'eq', 'motion') |map(attribute="name")|list
-            if bs-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                    {{ bs | replace(' Motion Sensor', '') | replace(' Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
-                {%-endif-%}
+          {%-for sensor in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'eq', 'motion')|selectattr('state', 'eq', 'on')|rejectattr('name', 'match', 'Front 4K') |map(attribute="name")|list
+            if sensor-%}
+              {%-if loop.index > 0-%}
+                {{ sensor | replace(' Motion Sensor', '') | replace(' Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
               {%-endif-%}
             {%-else-%}
               No motion
@@ -25,12 +23,10 @@ template:
       # DOORS
       - name: Door Summary
         state: >
-          {%-for bs in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'search', 'door')|selectattr('state', 'eq', 'on') |map(attribute='name')|list
-            if bs -%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                  {{bs}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} open{%endif-%}
-                {%-endif-%}
+          {%-for sensor in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'search', 'door')|selectattr('state', 'eq', 'on') |map(attribute='name')|list
+            if sensor -%}
+              {%-if loop.index > 0-%}
+                {{sensor}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} open{%endif-%}
               {%-endif-%}
             {%-else-%}
               All Closed
@@ -49,10 +45,8 @@ template:
         state: >
           {% for light in states.light |selectattr('state', 'eq', 'on')|rejectattr('entity_id', 'search', 'infra_red_lights_in_night_mode')|map(attribute='name')|list
             if light -%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                  {{light}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
-                {%-endif-%}
+              {%-if loop.index > 0-%}
+                {{light}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
               {%-endif-%}
             {%-else-%}
               All off
@@ -69,41 +63,22 @@ template:
         # CLIMATE
       - name: Climate Summary
         state: >
-          {%-for state in states.climate
-            if not state.state=="off" and not state.state=="unavailable"-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                  {%-for state in states.climate if not state.state =="off" and not state.state=="unavailable" and not state.name == "Aircon" -%}
-                    {{state.name | replace('A/C', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
-                  {%-endfor-%}
-                {%-endif-%}
+          {%-for entity in states.climate |selectattr('state', 'ne', 'off')|selectattr('state', 'ne', 'unavailable')|map(attribute='name')|list
+            if entity -%}
+              {%-if loop.index > 0-%}
+                {{entity | replace('A/C', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} on{%endif-%}
               {%-endif-%}
             {%-else-%}
               All off
           {%-endfor-%}
         icon: >
-          {%-for state in states.climate
-            if not state.state=="off" and not state.state=="unavailable"-%}
-              {%-if loop.last-%}
-                {%-if loop.index > 0-%}
-                    mdi:air-conditioner
-                {%-endif-%}
-              {%-endif-%}
+          {%-if states.climate |selectattr('state', 'ne', 'off')|selectattr('state', 'ne', 'unavailable')|map(attribute='name')|list|length-%}
+              mdi:air-conditioner
             {%-else-%}
               mdi:hvac-off
-          {%-endfor-%}
+          {%-endif-%}
         attributes:
-          count: |-
-            {%-for state in states.climate
-              if not state.state=="off" and not state.state=="unavailable" and not state.name == "Aircon"-%}
-                {%-if loop.last-%}
-                  {%-if loop.index > 0-%}
-                    {{ loop.length }}
-                  {%-endif-%}
-                {%-endif-%}
-              {%-else-%}
-                0
-            {%-endfor-%}
+          count: "{{states.climate |selectattr('state', 'ne', 'off')|selectattr('state', 'ne', 'unavailable')|map(attribute='name')|list|length}}"
 
       #### LOW BATTERY SENSOR ###############################################################
       #### Source: https://community.home-assistant.io/t/wildcard-entities-card/72969/3
@@ -126,7 +101,7 @@ template:
             if(state.attributes.device_class=="battery" and state.state | int(0) <= 25)-%}
               {%-if loop.last-%}
                 {%-if loop.index > 0-%}
-                    mdi:battery-10
+                  mdi:battery-10
                 {%-endif-%}
               {%-endif-%}
             {%-else-%}
