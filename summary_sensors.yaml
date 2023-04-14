@@ -8,7 +8,7 @@ template:
           {%-for sensor in states.binary_sensor| selectattr('attributes.device_class','defined')|selectattr('attributes.device_class', 'eq', 'motion')|selectattr('state', 'eq', 'on')|rejectattr('name', 'match', 'Front 4K') |map(attribute="name")|list
             if sensor-%}
               {%-if loop.index > 0-%}
-                {{ sensor | replace(' Motion Sensor', '') | replace(' Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
+                {{ sensor | replace('Motion Sensor ', '') | replace(' Motion', '')}}{%-if not loop.last -%}{%-if(loop.index+1==loop.length)%} & {%else%}, {%endif-%}{%-else%} motion{%endif-%}
               {%-endif-%}
             {%-else-%}
               No motion
