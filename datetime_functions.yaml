@@ -1,12 +1,5 @@
 binary_sensor:
-  - platform: workday
-    name: Workday Sensor
-    country: AU
-    province: NSW
-    remove_holidays:
-      - "Bank Holiday"
-
-    # Next Alarm templates #
+  # Next Alarm templates #
   - platform: template
     sensors:
       trav_alarm_trigger_5min:
