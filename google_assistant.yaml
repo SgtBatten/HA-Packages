@@ -23,9 +23,9 @@ google_assistant:
       expose: false
     fan.bed_3_fan:
       expose: false
-    light.garage:
+    light.garage_front:
       expose: false
-    light.garage_2:
+    light.garage_back:
       expose: false
     light.bedside_lamps:
       aliases:
@@ -33,6 +33,10 @@ google_assistant:
         - READING_LAMPS
         - BEDSIDE_LIGHTS
         - PENDANTS
+    light.bed_1_downlights:
+      aliases:
+        - DOWN_LIGHTS
+        - CEILING_LIGHTS
     light.switch_house_number:
       aliases:
         - STREET_LIGHT
