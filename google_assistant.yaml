@@ -17,7 +17,7 @@ google_assistant:
     #     aliases:
     #       - BRIGHT_LIGHTS
     #       - ENTRY_LIGHTS
-    climate.escea_fireplace
+    climate.escea_fireplace:
       aliases:
         - FIRE
         - FIREPLACE
