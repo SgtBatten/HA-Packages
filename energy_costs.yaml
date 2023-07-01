@@ -4,31 +4,31 @@ template:
         unique_id: electricity_import_rate_high_demand
         icon: mdi:cash-minus
         unit_of_measurement: "$/kWh"
-        state: "0.25707"
+        state: "0.28897"
 
       - name: "Electricity Import Rate Low Demand"
         unique_id: electricity_import_rate_low_demand
         icon: mdi:cash-minus
         unit_of_measurement: "$/kWh"
-        state: "0.15191"
+        state: "0.17072"
 
       - name: "Electricity Import Rate Peak"
         unique_id: electricity_import_rate_peak
         icon: mdi:cash-minus
         unit_of_measurement: "$/kWh"
-        state: "0.16907"
+        state: "0.26114"
 
       - name: "Electricity Import Rate Shoulder"
         unique_id: electricity_import_rate_shoulder
         icon: mdi:cash-minus
         unit_of_measurement: "$/kWh"
-        state: "0.16907"
+        state: "0.26114"
 
       - name: "Electricity Import Rate Off Peak"
         unique_id: electricity_import_rate_off_peak
         icon: mdi:cash-minus
         unit_of_measurement: "$/kWh"
-        state: "0.16907"
+        state: "0.26114"
 
       - name: "Electricity Export Rate"
         unique_id: electricity_export_rate
@@ -40,7 +40,7 @@ template:
         unique_id: electricity_supply_charge
         icon: mdi:cash-plus
         unit_of_measurement: "$/day"
-        state: "1.04863"
+        state: "1.16523"
 
       - name: "Electricity Total Cost Daily"
         unique_id: electricity_total_cost_daily
