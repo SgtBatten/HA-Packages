@@ -4,7 +4,7 @@ binary_sensor:
     sensors:
       trav_alarm_trigger_5min:
         value_template: >-
-          {% set alarm_time = as_timestamp(states('sensor.pixel_7_pro_next_alarm'),0) %}
+          {% set alarm_time = as_timestamp(states('sensor.travis_7_pro_next_alarm'),0) %}
           {% set time_now = as_timestamp(now() | default(0)) %}
           {% if alarm_time != 0 %}
             {{ time_now >= alarm_time - 900 }}
