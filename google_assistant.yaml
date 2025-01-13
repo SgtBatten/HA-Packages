@@ -10,6 +10,7 @@ google_assistant:
     - climate
     - lock
     - fan
+    - cover
   entity_config:
     ### HEY GOOGLE, SYNC MY DEVICES
     #   switch.kitchen:
@@ -21,6 +22,15 @@ google_assistant:
       aliases:
         - FIRE
         - FIREPLACE
+    climate.shed_aircon:
+      aliases:
+        - SHED_A_C
+        - SHED_AIRCON
+    cover.gate_controller_gate:
+      aliases:
+        - FRONT_GATE
+        - SLIDING_GATE
+        - GATE
     fan.bed_1_fan:
       expose: false
     fan.bed_2_fan:
@@ -56,3 +66,5 @@ google_assistant:
       expose: true
     switch.heater_mode:
       expose: true
+    
+
