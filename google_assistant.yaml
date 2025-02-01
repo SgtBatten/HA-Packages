@@ -56,10 +56,6 @@ google_assistant:
         - STREET_LIGHT
         - FRONT_GARDEN_LIGHT
         - FRONT_LIGHT
-    # light.tab_s:
-    #   expose: false
-    # light.travs_pc:
-    #   expose: false
     switch.holiday_mode:
       expose: true
     switch.tradie_mode:
