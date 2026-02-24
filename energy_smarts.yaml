@@ -5,6 +5,10 @@ sensor:
     state_characteristic: average_linear
     max_age:
       minutes: 1
+  - platform: foxess
+    deviceID: !secret foxess_inverter_serial
+    deviceSN: !secret foxess_inverter_serial
+    apiKey: !secret foxess_api_key
 
 input_number:
   demand_warning_threshold:
